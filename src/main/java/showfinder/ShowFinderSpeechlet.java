@@ -9,22 +9,14 @@
  */
 package showfinder;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
+import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,9 +30,9 @@ import com.amazon.speech.speechlet.SessionStartedRequest;
 import com.amazon.speech.speechlet.Speechlet;
 import com.amazon.speech.speechlet.SpeechletException;
 import com.amazon.speech.speechlet.SpeechletResponse;
-import com.amazon.speech.ui.SsmlOutputSpeech;
 import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
+import com.amazon.speech.ui.SsmlOutputSpeech; 
 
 /**
  * This sample shows how to create a Lambda function for handling Alexa Skill requests that:
@@ -52,7 +44,7 @@ import com.amazon.speech.ui.SimpleCard;
  * TicketMasterFetchIntent - {city}, {day}
  * Response - Do you want me to go on or are you interested in an event?
  * 
- * Go on
+ * Go on / yes / yup
  * TicketMasterContinueIntent -
  * Response - Would you like to get details for an Uber ride?
  * 
@@ -78,7 +70,7 @@ public class ShowFinderSpeechlet implements Speechlet {
     /**
      * Constant defining number of events to be read at one time.
      */
-    private static final int PAGINATION_SIZE = 3;
+    private static final int PAGINATION_SIZE = 2;
 
     /**
      * Length of the delimiter between individual events.
@@ -86,14 +78,13 @@ public class ShowFinderSpeechlet implements Speechlet {
     //private static final int DELIMITER_SIZE = 2;
 
     /**
-     * Constant defining session attribute key for the event index.
+     * Constant
      */
     private static final String SESSION_INDEX = "index";
-
-    /**
-     * Constant defining session attribute key for the event text key for date of events.
-     */
     private static final String SESSION_TEXT = "text";
+    private static final String SESSION_DESC = "desc";
+	private static final String SESSION_LAT = "lat";
+	private static final String SESSION_LON = "lon";
 
     /**
      * Constant defining session attribute key for the intent slot key for the date of events.
@@ -105,7 +96,7 @@ public class ShowFinderSpeechlet implements Speechlet {
     /**
      * Size of events from Ticketmaster response.
      */
-    private static final int SIZE_OF_EVENTS = 10;
+    //private static final int SIZE_OF_EVENTS = 10;
 
     /**
      * Array of month names.
@@ -155,17 +146,27 @@ public class ShowFinderSpeechlet implements Speechlet {
         String intentName = intent.getName();
 
         if ("GetTicketMasterFetchIntent".equals(intentName)) {
-            return handleTicketmasterFetchRequest(intent, session);
+            try {
+				return handleTicketmasterFetchRequest(intent, session);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         } else if ("GetTicketMasterContinueIntent".equals(intentName)) {
             return handleTicketmasterContinueRequest(session);
         } else if ("GetTicketMasterDetailsIntent".equals(intentName)) {
                 return handleTicketmasterDetailsRequest(intent, session);
         } else if ("GetUberDetailsIntent".equals(intentName)) {
-            return handleUberDetailsRequest(intent, session);
+            try {
+				return handleUberDetailsRequest(intent, session);
+			} catch (IOException | JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         } else if ("HelpIntent".equals(intentName)) {
             // Create the plain text output.
             String speechOutput =
-                    "With Show Finder, you can find about events happening in your city and book a ride through Uber.";
+                    "With Show Finder, you can find events happening in your city and book a ride through Uber.";
 
             String repromptText = "Where do you want to find events?";
 
@@ -178,6 +179,7 @@ public class ShowFinderSpeechlet implements Speechlet {
         } else {
             throw new SpeechletException("Invalid Intent");
         }
+		return null;
     }
 
     @Override
@@ -195,7 +197,7 @@ public class ShowFinderSpeechlet implements Speechlet {
      * @return SpeechletResponse object with voice/card response to return to the user
      */
     private SpeechletResponse getWelcomeResponse() {
-        String speechOutput = "Welcome to Show Finder. Where do you want to watch a movie?";
+        String speechOutput = "Welcome to Show Finder. Give me a location and a date to look for events.";
         // If the user either does not reply to the welcome message or says something that is not
         // understood, they will be prompted again with this text.
         String repromptText =
@@ -243,8 +245,9 @@ public class ShowFinderSpeechlet implements Speechlet {
      * @param session
      *            the session object
      * @return SpeechletResponse object with voice/card response to return to the user
+     * @throws JSONException 
      */
-    private SpeechletResponse handleTicketmasterFetchRequest(Intent intent, Session session) {
+    private SpeechletResponse handleTicketmasterFetchRequest(Intent intent, Session session) throws JSONException {
         /*Calendar calendar*/ String date = getCalendar(intent);
         /*
         String month = MONTH_NAMES[calendar.get(Calendar.MONTH)];
@@ -256,8 +259,11 @@ public class ShowFinderSpeechlet implements Speechlet {
         String cardTitle = "Events on " + date;
         String city = intent.getSlot(SLOT_CITY).getValue();
         
-        ArrayList<String> events = getEventsFromTicketMaster(date, city); /*getJsonEventsFromWikipedia(month, date);*/
-        String speechOutput = "";
+        Ticketmaster ticketmaster = new Ticketmaster();
+		ArrayList<EventsEntity> events = ticketmaster.getEventDetails(city, date);
+        //ArrayList<String> events = getEventsFromTicketMaster(date, city); /*getJsonEventsFromWikipedia(month, date);*/
+        
+		String speechOutput = "";
         if (events == null || events.isEmpty()) {
             speechOutput = "There are no events right now. Please try again later.";
 
@@ -273,9 +279,9 @@ public class ShowFinderSpeechlet implements Speechlet {
             cardOutputBuilder.append(cardPrefixContent);
             for (int i = 0; i < PAGINATION_SIZE; i++) {
                 speechOutputBuilder.append("<p>");
-                speechOutputBuilder.append(events.get(i));
-                speechOutputBuilder.append("</p> ");
-                cardOutputBuilder.append(events.get(i));
+                speechOutputBuilder.append(events.get(i).getEventName());
+                speechOutputBuilder.append("</p>");
+                cardOutputBuilder.append(events.get(i).getEventName());
                 cardOutputBuilder.append(" ");
             }
             speechOutputBuilder.append(" Do you want more shows?");
@@ -292,7 +298,21 @@ public class ShowFinderSpeechlet implements Speechlet {
             // After reading the first 3 events, set the count to 3 and add the events
             // to the session attributes
             session.setAttribute(SESSION_INDEX, PAGINATION_SIZE);
-            session.setAttribute(SESSION_TEXT, events);
+            ArrayList<String> name = new ArrayList<String>();
+            ArrayList<String> description = new ArrayList<String>();
+            ArrayList<String> latitude = new ArrayList<String>();
+            ArrayList<String> longitude = new ArrayList<String>();
+            
+            for(int i=0; i < events.size(); i++) {
+            	name.add(events.get(i).getEventName());
+            	description.add(events.get(i).getDescription());
+            	latitude.add(events.get(i).getLatitude());
+            	longitude.add(events.get(i).getLongitude());
+            }
+            session.setAttribute(SESSION_TEXT, name);
+            session.setAttribute(SESSION_DESC, description);
+            session.setAttribute(SESSION_LAT, latitude);
+            session.setAttribute(SESSION_LON, longitude);
 
             SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
             response.setCard(card);
@@ -313,7 +333,8 @@ public class ShowFinderSpeechlet implements Speechlet {
      */
     private SpeechletResponse handleTicketmasterContinueRequest(Session session) {
         String cardTitle = "More events on this day";
-        ArrayList<String> events = (ArrayList<String>) session.getAttribute(SESSION_TEXT);
+		@SuppressWarnings("unchecked")
+		ArrayList<String> events = (ArrayList<String>) session.getAttribute(SESSION_TEXT);
         int index = (int) session.getAttribute(SESSION_INDEX);
         String speechOutput = "";
         String cardOutput = "";
@@ -336,8 +357,8 @@ public class ShowFinderSpeechlet implements Speechlet {
                 index++;
             }
             if (index < events.size()) {
-                speechOutputBuilder.append(" Do you want more shows?");
-                cardOutputBuilder.append(" Do you want more shows?");
+                speechOutputBuilder.append(" Do you want to hear more?");
+                cardOutputBuilder.append(" Do you want to hear more?");
             }
             session.setAttribute(SESSION_INDEX, index);
             speechOutput = speechOutputBuilder.toString();
@@ -359,11 +380,12 @@ public class ShowFinderSpeechlet implements Speechlet {
     	String cardTitle = "Details of selected event";
         
         
-        ArrayList<String> events = (ArrayList<String>) session.getAttribute(SESSION_TEXT);
+        @SuppressWarnings("unchecked")
+		ArrayList<String> events = (ArrayList<String>) session.getAttribute(SESSION_DESC);
         int index = (int) session.getAttribute(SESSION_INDEX);
         
         int number = Integer.parseInt(intent.getSlot(SLOT_NUMBER).getValue());
-    	String speechOutput = events.get(index-PAGINATION_SIZE+number-1).description;
+    	String speechOutput = events.get(index-PAGINATION_SIZE+number-1);
     	String cardOutput = speechOutput;
     	
         String repromptText = "Do you want to find more shows?";
@@ -377,18 +399,22 @@ public class ShowFinderSpeechlet implements Speechlet {
         return response;
     }
     
-    private SpeechletResponse handleUberDetailsRequest(Intent intent, Session session) {
+    private SpeechletResponse handleUberDetailsRequest(Intent intent, Session session) throws IOException, JSONException {
     	String cardTitle = "More events on this day";
     	
     	String source_lat = "34.0223519"; 
     	String source_lon = "-118.2873057";
     	
-    	ArrayList<String> events = (ArrayList<String>) session.getAttribute(SESSION_TEXT);
-        int index = (int) session.getAttribute(SESSION_INDEX);
+    	@SuppressWarnings("unchecked")
+		ArrayList<String> lat = (ArrayList<String>) session.getAttribute(SESSION_LAT);
+    	@SuppressWarnings("unchecked")
+		ArrayList<String> lon = (ArrayList<String>) session.getAttribute(SESSION_LON);
+    	
+    	int index = (int) session.getAttribute(SESSION_INDEX);
         
         int number = Integer.parseInt(intent.getSlot(SLOT_NUMBER).getValue());
-    	String dest_lat = events.get(index-PAGINATION_SIZE+number-1).latitude;
-    	String dest_lon = events.get(index-PAGINATION_SIZE+number-1).longitude;
+    	String dest_lat = lat.get(index-PAGINATION_SIZE+number-1);
+    	String dest_lon = lon.get(index-PAGINATION_SIZE+number-1);
     	
     	String speechOutput = Uber.getPriceEstimateAndTimeToDestinationOfUber(source_lat, source_lon, dest_lat, dest_lon, "uberX");
         String cardOutput = speechOutput;
