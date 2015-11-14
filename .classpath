@@ -4,6 +4,9 @@
 	<classpathentry exported="true" kind="lib" path="repo/alexa-skills-kit/alexa-skills-kit/1.1/alexa-skills-kit-1.1.jar"/>
 	<classpathentry kind="lib" path="/Users/shantanubal/Downloads/slf4j-1.7.13/slf4j-api-1.7.13.jar"/>
 	<classpathentry kind="lib" path="/Users/shantanubal/Downloads/commons-io-2.4/commons-io-2.4.jar"/>
+	<classpathentry kind="lib" path="/Users/shantanubal/Downloads/java-json.jar"/>
+	<classpathentry kind="lib" path="/Users/shantanubal/Documents/workspace/UberTest/jersey-bundle-1.8.jar"/>
+	<classpathentry kind="lib" path="/Users/shantanubal/Documents/workspace/UberTest/jersey-bundle-1.13-b01.jar"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

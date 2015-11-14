@@ -45,47 +45,24 @@ import com.amazon.speech.ui.SimpleCard;
 /**
  * This sample shows how to create a Lambda function for handling Alexa Skill requests that:
  * 
- * <ul>
- * <li><b>Web service</b>: communicate with an external web service to get events for specified days
- * in history (Wikipedia API)</li>
- * <li><b>Pagination</b>: after obtaining a list of events, read a small subset of events and wait
- * for user prompt to read the next subset of events by maintaining session state</li>
- * <p>
- * <li><b>Dialog and Session state</b>: Handles two models, both a one-shot ask and tell model, and
- * a multi-turn dialog model</li>
- * </ul>
- * <p>
- * <h2>Examples</h2>
- * <p>
- * <b>One-shot model</b>
- * <p>
- * User: "Alexa, ask History Buff what happened on August thirtieth."
- * <p>
- * Alexa: "For August thirtieth, in 2003, [...] . Wanna go deeper in history?"
- * <p>
- * User: "No."
- * <p>
- * Alexa: "Good bye!"
- * <p>
+ * Alexa, start show finder.
+ * onLaunch executed
  * 
- * <b>Dialog model</b>
- * <p>
- * User: "Alexa, open History Buff"
- * <p>
- * Alexa: "History Buff. What day do you want events for?"
- * <p>
- * User: "August thirtieth."
- * <p>
- * Alexa: "For August thirtieth, in 2003, [...] . Wanna go deeper in history?"
- * <p>
- * User: "Yes."
- * <p>
- * Alexa: "In 1995, Bosnian war [...] . Wanna go deeper in history?"
- * <p>
- * User: "No."
- * <p>
- * Alexa: "Good bye!"
- * <p>
+ * What's happening in LA today?
+ * TicketMasterFetchIntent - {city}, {day}
+ * Response - Do you want me to go on or are you interested in an event?
+ * 
+ * Go on
+ * TicketMasterContinueIntent -
+ * Response - Would you like to get details for an Uber ride?
+ * 
+ * Get me more details for event number 2
+ * TicketMasterDetailsIntent - {number}
+ * Response - 
+ * 
+ * Get me Uber details for event number 2
+ * UberDetailsIntent - {number}
+ *  
  */
 public class ShowFinderSpeechlet implements Speechlet {
     private static final Logger log = LoggerFactory.getLogger(ShowFinderSpeechlet.class);
@@ -93,10 +70,11 @@ public class ShowFinderSpeechlet implements Speechlet {
     /**
      * URL prefix to download history content from Wikipedia.
      */
-    private static final String URL_PREFIX =
+    /*private static final String URL_PREFIX =
             "https://en.wikipedia.org/w/api.php?action=query&prop=extracts"
                     + "&format=json&explaintext=&exsectionformat=plain&redirects=&titles=";
-
+	*/
+    
     /**
      * Constant defining number of events to be read at one time.
      */
@@ -105,7 +83,7 @@ public class ShowFinderSpeechlet implements Speechlet {
     /**
      * Length of the delimiter between individual events.
      */
-    private static final int DELIMITER_SIZE = 2;
+    //private static final int DELIMITER_SIZE = 2;
 
     /**
      * Constant defining session attribute key for the event index.
@@ -121,15 +99,19 @@ public class ShowFinderSpeechlet implements Speechlet {
      * Constant defining session attribute key for the intent slot key for the date of events.
      */
     private static final String SLOT_DAY = "day";
-
+    private static final String SLOT_CITY = "city";
+    private static final String SLOT_NUMBER = "number";
+    
     /**
-     * Size of events from Wikipedia response.
+     * Size of events from Ticketmaster response.
      */
     private static final int SIZE_OF_EVENTS = 10;
 
     /**
      * Array of month names.
      */
+    
+    /*
     private static final String[] MONTH_NAMES = {
             "January",
             "February",
@@ -143,7 +125,7 @@ public class ShowFinderSpeechlet implements Speechlet {
             "October",
             "November",
             "December"
-    };
+    };*/
 
     @Override
     public void onSessionStarted(final SessionStartedRequest request, final Session session)
@@ -172,16 +154,20 @@ public class ShowFinderSpeechlet implements Speechlet {
         Intent intent = request.getIntent();
         String intentName = intent.getName();
 
-        if ("GetFirstEventIntent".equals(intentName)) {
-            return handleFirstEventRequest(intent, session);
-        } else if ("GetNextEventIntent".equals(intentName)) {
-            return handleNextEventRequest(session);
+        if ("GetTicketMasterFetchIntent".equals(intentName)) {
+            return handleTicketmasterFetchRequest(intent, session);
+        } else if ("GetTicketMasterContinueIntent".equals(intentName)) {
+            return handleTicketmasterContinueRequest(session);
+        } else if ("GetTicketMasterDetailsIntent".equals(intentName)) {
+                return handleTicketmasterDetailsRequest(intent, session);
+        } else if ("GetUberDetailsIntent".equals(intentName)) {
+            return handleUberDetailsRequest(intent, session);
         } else if ("HelpIntent".equals(intentName)) {
             // Create the plain text output.
             String speechOutput =
-                    "With Show Finder, you can find what movies are playing nearby and book a ride through Uber.";
+                    "With Show Finder, you can find about events happening in your city and book a ride through Uber.";
 
-            String repromptText = "Where do you want to watch a movie?";
+            String repromptText = "Where do you want to find events?";
 
             return newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
         } else if ("FinishIntent".equals(intentName)) {
@@ -228,12 +214,13 @@ public class ShowFinderSpeechlet implements Speechlet {
      *            the intent object containing the day slot
      * @return the Calendar representation of that date
      */
-    private Calendar getCalendar(Intent intent) {
+    private String getCalendar(Intent intent) {
         Slot daySlot = intent.getSlot(SLOT_DAY);
         Date date;
-        Calendar calendar = Calendar.getInstance();
+        /*Calendar calendar = Calendar.getInstance();*/
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        
         if (daySlot != null && daySlot.getValue() != null) {
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-d");
             try {
                 date = dateFormat.parse(daySlot.getValue());
             } catch (ParseException e) {
@@ -242,8 +229,8 @@ public class ShowFinderSpeechlet implements Speechlet {
         } else {
             date = new Date();
         }
-        calendar.setTime(date);
-        return calendar;
+        
+        return dateFormat.format(date);
     }
 
     /**
@@ -257,21 +244,22 @@ public class ShowFinderSpeechlet implements Speechlet {
      *            the session object
      * @return SpeechletResponse object with voice/card response to return to the user
      */
-    private SpeechletResponse handleFirstEventRequest(Intent intent, Session session) {
-        Calendar calendar = getCalendar(intent);
+    private SpeechletResponse handleTicketmasterFetchRequest(Intent intent, Session session) {
+        /*Calendar calendar*/ String date = getCalendar(intent);
+        /*
         String month = MONTH_NAMES[calendar.get(Calendar.MONTH)];
         String date = Integer.toString(calendar.get(Calendar.DATE));
-
-        String speechPrefixContent = "<p>For " + month + " " + date + "</p> ";
-        String cardPrefixContent = "For " + month + " " + date + ", ";
-        String cardTitle = "Events on " + month + " " + date;
-
-        ArrayList<String> events = getJsonEventsFromWikipedia(month, date);
+		*/
+        
+        String speechPrefixContent = "<p>For " + date + "</p> ";
+        String cardPrefixContent = "For " + date + ", ";
+        String cardTitle = "Events on " + date;
+        String city = intent.getSlot(SLOT_CITY).getValue();
+        
+        ArrayList<String> events = getEventsFromTicketMaster(date, city); /*getJsonEventsFromWikipedia(month, date);*/
         String speechOutput = "";
-        if (events.isEmpty()) {
-            speechOutput =
-                    "There is a problem connecting to Wikipedia at this time."
-                            + " Please try again later.";
+        if (events == null || events.isEmpty()) {
+            speechOutput = "There are no events right now. Please try again later.";
 
             // Create the plain text output
             SsmlOutputSpeech outputSpeech = new SsmlOutputSpeech();
@@ -290,14 +278,11 @@ public class ShowFinderSpeechlet implements Speechlet {
                 cardOutputBuilder.append(events.get(i));
                 cardOutputBuilder.append(" ");
             }
-            speechOutputBuilder.append(" Wanna go deeper in history?");
-            cardOutputBuilder.append(" Wanna go deeper in history?");
+            speechOutputBuilder.append(" Do you want more shows?");
+            cardOutputBuilder.append(" Do you want more shows?");
             speechOutput = speechOutputBuilder.toString();
 
-            String repromptText =
-                    "With History Buff, you can get historical events for any day of the year."
-                            + " For example, you could say today, or August thirtieth."
-                            + " Now, which day do you want?";
+            String repromptText = "Do you want to find out about more shows?";
 
             // Create the Simple card content.
             SimpleCard card = new SimpleCard();
@@ -326,21 +311,19 @@ public class ShowFinderSpeechlet implements Speechlet {
      *            object containing session attributes with events list and index
      * @return SpeechletResponse object with voice/card response to return to the user
      */
-    private SpeechletResponse handleNextEventRequest(Session session) {
-        String cardTitle = "More events on this day in history";
+    private SpeechletResponse handleTicketmasterContinueRequest(Session session) {
+        String cardTitle = "More events on this day";
         ArrayList<String> events = (ArrayList<String>) session.getAttribute(SESSION_TEXT);
         int index = (int) session.getAttribute(SESSION_INDEX);
         String speechOutput = "";
         String cardOutput = "";
         if (events == null) {
             speechOutput =
-                    "With History Buff, you can get historical events for any day of the year."
-                            + " For example, you could say today, or August thirtieth."
-                            + " Now, which day do you want?";
+                    "With Show Finder, you can find out what movies are playing nearby and book a ride on Uber."
+            			+ "Where would you like to watch a movie?";
         } else if (index >= events.size()) {
             speechOutput =
-                    "There are no more events for this date. Try another date by saying, "
-                            + " get events for august thirtieth.";
+                    "There are no more shows in this city.";
         } else {
             StringBuilder speechOutputBuilder = new StringBuilder();
             StringBuilder cardOutputBuilder = new StringBuilder();
@@ -360,7 +343,7 @@ public class ShowFinderSpeechlet implements Speechlet {
             speechOutput = speechOutputBuilder.toString();
             cardOutput = cardOutputBuilder.toString();
         }
-        String repromptText = "Do you want to find out about more shows?";
+        String repromptText = "Do you want to find more shows?";
 
         // Create the Simple card content.
         SimpleCard card = new SimpleCard();
@@ -371,7 +354,55 @@ public class ShowFinderSpeechlet implements Speechlet {
         response.setCard(card);
         return response;
     }
-
+    
+    private SpeechletResponse handleTicketmasterDetailsRequest(Intent intent, Session session) {
+    	String cardTitle = "Details of selected event";
+        
+        
+        ArrayList<String> events = (ArrayList<String>) session.getAttribute(SESSION_TEXT);
+        int index = (int) session.getAttribute(SESSION_INDEX);
+        
+        int number = Integer.parseInt(intent.getSlot(SLOT_NUMBER).getValue());
+    	String speechOutput = events.get(index-PAGINATION_SIZE+number-1).description;
+    	String cardOutput = speechOutput;
+    	
+        String repromptText = "Do you want to find more shows?";
+        // Create the Simple card content.
+        SimpleCard card = new SimpleCard();
+        card.setTitle(cardTitle);
+        card.setContent(cardOutput.toString());
+        
+        SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
+        response.setCard(card);
+        return response;
+    }
+    
+    private SpeechletResponse handleUberDetailsRequest(Intent intent, Session session) {
+    	String cardTitle = "More events on this day";
+    	
+    	String source_lat = "34.0223519"; 
+    	String source_lon = "-118.2873057";
+    	
+    	ArrayList<String> events = (ArrayList<String>) session.getAttribute(SESSION_TEXT);
+        int index = (int) session.getAttribute(SESSION_INDEX);
+        
+        int number = Integer.parseInt(intent.getSlot(SLOT_NUMBER).getValue());
+    	String dest_lat = events.get(index-PAGINATION_SIZE+number-1).latitude;
+    	String dest_lon = events.get(index-PAGINATION_SIZE+number-1).longitude;
+    	
+    	String speechOutput = Uber.getPriceEstimateAndTimeToDestinationOfUber(source_lat, source_lon, dest_lat, dest_lon, "uberX");
+        String cardOutput = speechOutput;
+        
+        String repromptText = "Do you want to find more shows?";
+        // Create the Simple card content.
+        SimpleCard card = new SimpleCard();
+        card.setTitle(cardTitle);
+        card.setContent(cardOutput.toString());
+        
+        SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
+        response.setCard(card);
+        return response;
+    }
     /**
      * Download JSON-formatted list of events from Wikipedia, for a defined day/date, and return a
      * String array of the events, with each event representing an element in the array.
@@ -382,6 +413,7 @@ public class ShowFinderSpeechlet implements Speechlet {
      *            the date to get events for, example: 7
      * @return String array of events for that date, 1 event per element of the array
      */
+    /*
     private ArrayList<String> getJsonEventsFromWikipedia(String month, String date) {
         InputStreamReader inputStream = null;
         BufferedReader bufferedReader = null;
@@ -404,7 +436,7 @@ public class ShowFinderSpeechlet implements Speechlet {
             IOUtils.closeQuietly(bufferedReader);
         }
         return parseJson(text);
-    }
+    }*/
 
     /**
      * Parse JSON-formatted list of events/births/deaths from Wikipedia, extract list of events and
@@ -415,6 +447,7 @@ public class ShowFinderSpeechlet implements Speechlet {
      *            the JSON formatted list of events/births/deaths for a certain date
      * @return String array of events for that date, 1 event per element of the array
      */
+    /*
     private ArrayList<String> parseJson(String text) {
         // sizeOf (\nEvents\n) is 10
         text =
@@ -447,6 +480,7 @@ public class ShowFinderSpeechlet implements Speechlet {
         Collections.reverse(events);
         return events;
     }
+    */
 
     /**
      * Wrapper for creating the Ask response from the input strings.
