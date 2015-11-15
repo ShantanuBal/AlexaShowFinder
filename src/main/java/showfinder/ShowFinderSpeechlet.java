@@ -489,8 +489,10 @@ public class ShowFinderSpeechlet implements Speechlet {
             try{
                 productId = Uber.getProducts(source_lat, source_lon, "uberX");
                 login_url = "?"+"user_id="+userId+"&source_lat="+source_lat+"&source_lon="+source_lon+"&dest_lat="+dest_lat+"&dest_lon="+dest_lon+"&product_id="+productId;
-                String pythonEndpointUrl = "https://uberalexa.azurewebsites.net/loginurl/" + login_url;
+                String pythonEndpointUrl = "https://uberalexa.azurewebsites.net/loginurl" + login_url;
+                
                 enpointResponseUrl = Uber.getResponseFromUrl(pythonEndpointUrl).toString();
+                speechOutput = "Please check your alexa app for details";
                 
             }catch(Exception e) {
                 speechOutput = "I am sorry. Could not book the ride";
@@ -504,7 +506,7 @@ public class ShowFinderSpeechlet implements Speechlet {
             card.setTitle(cardTitle);
             card.setContent(cardOutput.toString());
     	}
-        response = newAskResponse("<speak>" + "Please check your alexa app for details" + "</speak>", "<speak>" + repromptText + "</speak>");
+        response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
         response.setCard(card);
         return response;
     }

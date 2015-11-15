@@ -34,7 +34,7 @@ public class UberBooking {
 		final String ERROR = "-1";
 
 		String productId = Uber.getProducts(start_latitude, start_longitude, productName);
-		String requestUrl = UBER_SANDBOX_SERVER + "/v1/requests";
+		String requestUrl = UBER_SERVER + "/v1/requests";
 		String requestJsonString = generateJsonString(start_latitude, start_longitude, end_latitude, end_longitude,
 				productId);
 		String response = null;
