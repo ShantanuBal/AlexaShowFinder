@@ -455,12 +455,13 @@ public class ShowFinderSpeechlet implements Speechlet {
 		SimpleCard card = new SimpleCard();
 		String repromptText = "Do you want to find more shows?";
 		
-    	if (isInDB(userId)) {
+		String access_t = isInDB(userId);
+    	if (!access_t.equals("Error Occured")) {
     		// Code snippet to book uber
-        
     		
-    		speechOutput = "Your Uber booking request has been made.";
-    		cardOutput = speechOutput;
+    		
+    		speechOutput = "Your Uber booking request has been made with access code "+access_t;
+    		cardOutput = speechOutput + access_t;
     	
     		// Create the Simple card content.
     		card.setTitle(cardTitle);
@@ -482,9 +483,11 @@ public class ShowFinderSpeechlet implements Speechlet {
     }
    
 
-    private boolean isInDB(String userId) {
+    private String isInDB(String userId) {
 		// TODO Auto-generated method stub
-		return false;
+    	String path = ""; ///home/madhukar/Downloads/rootkey
+		QueryDynamo q = new QueryDynamo(path);
+		return q.getUserAccessCode(userId);
 	}
 
 	/**
