@@ -163,6 +163,8 @@ public class ShowFinderSpeechlet implements Speechlet {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+        } else if ("GetUberBookingIntent".equals(intentName)) {
+            return handleUberBookingRequest(intent, session);
         } else if ("HelpIntent".equals(intentName)) {
             // Create the plain text output.
             String speechOutput =
@@ -429,86 +431,63 @@ public class ShowFinderSpeechlet implements Speechlet {
         response.setCard(card);
         return response;
     }
-    /**
-     * Download JSON-formatted list of events from Wikipedia, for a defined day/date, and return a
-     * String array of the events, with each event representing an element in the array.
-     * 
-     * @param month
-     *            the month to get events for, example: April
-     * @param date
-     *            the date to get events for, example: 7
-     * @return String array of events for that date, 1 event per element of the array
-     */
-    /*
-    private ArrayList<String> getJsonEventsFromWikipedia(String month, String date) {
-        InputStreamReader inputStream = null;
-        BufferedReader bufferedReader = null;
-        String text = "";
-        try {
-            String line;
-            URL url = new URL(URL_PREFIX + month + "_" + date);
-            inputStream = new InputStreamReader(url.openStream(), Charset.forName("US-ASCII"));
-            bufferedReader = new BufferedReader(inputStream);
-            StringBuilder builder = new StringBuilder();
-            while ((line = bufferedReader.readLine()) != null) {
-                builder.append(line);
-            }
-            text = builder.toString();
-        } catch (IOException e) {
-            // reset text variable to a blank string
-            text = "";
-        } finally {
-            IOUtils.closeQuietly(inputStream);
-            IOUtils.closeQuietly(bufferedReader);
-        }
-        return parseJson(text);
-    }*/
-
-    /**
-     * Parse JSON-formatted list of events/births/deaths from Wikipedia, extract list of events and
-     * split the events into a String array of individual events. Run Regex matchers to make the
-     * list pretty by adding a comma after the year to add a pause, and by removing a unicode char.
-     * 
-     * @param text
-     *            the JSON formatted list of events/births/deaths for a certain date
-     * @return String array of events for that date, 1 event per element of the array
-     */
-    /*
-    private ArrayList<String> parseJson(String text) {
-        // sizeOf (\nEvents\n) is 10
-        text =
-                text.substring(text.indexOf("\\nEvents\\n") + SIZE_OF_EVENTS,
-                        text.indexOf("\\n\\n\\nBirths"));
-        ArrayList<String> events = new ArrayList<String>();
-        if (text.isEmpty()) {
-            return events;
-        }
-        int startIndex = 0, endIndex = 0;
-        while (endIndex != -1) {
-            endIndex = text.indexOf("\\n", startIndex + DELIMITER_SIZE);
-            String eventText =
-                    (endIndex == -1 ? text.substring(startIndex) : text.substring(startIndex,
-                            endIndex));
-            // replace dashes returned in text from Wikipedia's API
-            Pattern pattern = Pattern.compile("\\\\u2013\\s*");
-            Matcher matcher = pattern.matcher(eventText);
-            eventText = matcher.replaceAll("");
-            // add comma after year so Alexa pauses before continuing with the sentence
-            pattern = Pattern.compile("(^\\d+)");
-            matcher = pattern.matcher(eventText);
-            if (matcher.find()) {
-                eventText = matcher.replaceFirst(matcher.group(1) + ",");
-            }
-            eventText = "In " + eventText;
-            startIndex = endIndex + 2;
-            events.add(eventText);
-        }
-        Collections.reverse(events);
-        return events;
+    
+    private SpeechletResponse handleUberBookingRequest(Intent intent, Session session) {
+    	String cardTitle = "More events on this day";
+    	
+    	String source_lat = "34.0223519"; 
+    	String source_lon = "-118.2873057";
+    	
+    	String userId = session.getUser().getUserId();
+    	
+    	@SuppressWarnings("unchecked")
+		ArrayList<String> lat = (ArrayList<String>) session.getAttribute(SESSION_LAT);
+    	@SuppressWarnings("unchecked")
+		ArrayList<String> lon = (ArrayList<String>) session.getAttribute(SESSION_LON);
+    	
+    	int index = (int) session.getAttribute(SESSION_INDEX);
+        
+        int number = Integer.parseInt(intent.getSlot(SLOT_NUMBER).getValue());
+    	String dest_lat = lat.get(index-PAGINATION_SIZE+number-1);
+    	String dest_lon = lon.get(index-PAGINATION_SIZE+number-1);
+    	
+    	String speechOutput, cardOutput;
+		SimpleCard card = new SimpleCard();
+		String repromptText = "Do you want to find more shows?";
+		
+    	if (isInDB(userId)) {
+    		// Code snippet to book uber
+        
+    		
+    		speechOutput = "Your Uber booking request has been made.";
+    		cardOutput = speechOutput;
+    	
+    		// Create the Simple card content.
+    		card.setTitle(cardTitle);
+    		card.setContent(cardOutput.toString());
+    	} else {
+    		//Code snippet for generating login URL
+    		String login_url = "";
+    		
+    		speechOutput = "Go to the Alexa app to allow me to book your ride.";
+    		cardOutput = login_url;
+    	
+    		// Create the Simple card content.
+    		card.setTitle(cardTitle);
+    		card.setContent(cardOutput.toString());
+    	}
+        SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
+        response.setCard(card);
+        return response;
     }
-    */
+   
 
-    /**
+    private boolean isInDB(String userId) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	/**
      * Wrapper for creating the Ask response from the input strings.
      * 
      * @param stringOutput
