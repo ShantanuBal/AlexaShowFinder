@@ -457,8 +457,16 @@ public class ShowFinderSpeechlet implements Speechlet {
 		
 		String access_t = isInDB(userId);
     	if (!access_t.equals("Error Occured")) {
-    		// Code snippet to book uber
-    		
+    		UberBooking uberBooking = new UberBooking();
+    		try {
+				uberBooking.requestUber(source_lat, source_lon, dest_lat, dest_lon, "uberX", access_t);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
     		
     		speechOutput = "Your Uber booking request has been made with access code "+access_t;
     		cardOutput = speechOutput + access_t;
