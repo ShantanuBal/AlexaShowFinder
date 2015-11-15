@@ -1,6 +1,13 @@
+showfinder/OAuth2Credentials$1.class
 showfinder/Uber.class
-showfinder/ShowFinderSpeechletRequestStreamHandler.class
-showfinder/QueryDynamo.class
-showfinder/Ticketmaster.class
-showfinder/EventsEntity.class
+showfinder/AuthException.class
 showfinder/ShowFinderSpeechlet.class
+showfinder/OAuth2Credentials.class
+showfinder/QueryDynamo.class
+showfinder/Oauth2.class
+showfinder/Ticketmaster.class
+showfinder/OAuth2Credentials$Builder.class
+showfinder/EventsEntity.class
+showfinder/OAuth2Credentials$Builder$1.class
+showfinder/ShowFinderSpeechletRequestStreamHandler.class
+showfinder/OAuth2Credentials$Scope.class

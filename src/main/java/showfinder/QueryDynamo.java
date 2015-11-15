@@ -26,6 +26,7 @@ import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
 import com.amazonaws.services.dynamodbv2.util.Tables;
+import com.amazonaws.auth.BasicAWSCredentials;
 public class QueryDynamo {
 	String credential_path;
 	static AmazonDynamoDBClient dynamoDB;
@@ -34,9 +35,11 @@ public class QueryDynamo {
 		init();
 	}
     public void init() throws Exception {
-        AWSCredentials credentials = null;
+        //AWSCredentials credentials = null;
+    	AWSCredentials credentials = null;
         try {
-            credentials = new ProfileCredentialsProvider(this.credential_path,"default").getCredentials();
+            credentials = new BasicAWSCredentials("AKIAIP7TPCBBGPWD3SZQ", "/Q+jePLdYvfi2QVhpZw3Psu/b+14G4T++6X6yhBC");
+            //credentials = new ProfileCredentialsProvider(this.credential_path,"default").getCredentials();
         } catch (Exception e) {
             throw new AmazonClientException(
                     "Cannot load the credentials from the credential profiles file. " +

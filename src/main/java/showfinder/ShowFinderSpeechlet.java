@@ -469,8 +469,17 @@ public class ShowFinderSpeechlet implements Speechlet {
     	} else {
     		//Code snippet for generating login URL
     		String login_url = "";
+    		try{
+    			Oauth2 auth = new Oauth2();
+    			login_url = auth.getAuthorizationUrl();
+    		}catch(Exception e){
+    			speechOutput = "I am sorry. Could not book the ride";
+    			SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
+    	        response.setCard(card);
+    	        return response;
+    		}
     		
-    		speechOutput = "Go to the Alexa app to allow me to book your ride.";
+    		speechOutput = "Visit the Alexa app to allow me to book your ride.";
     		cardOutput = login_url;
     	
     		// Create the Simple card content.
@@ -486,8 +495,13 @@ public class ShowFinderSpeechlet implements Speechlet {
     private String isInDB(String userId) {
 		// TODO Auto-generated method stub
     	String path = ""; ///home/madhukar/Downloads/rootkey
-		QueryDynamo q = new QueryDynamo(path);
-		return q.getUserAccessCode(userId);
+    	try{
+    		QueryDynamo q = new QueryDynamo(path);
+    		return q.getUserAccessCode(userId);
+    	}catch(Exception e){
+    		return "Error Occured";
+    	}
+		
 	}
 
 	/**
