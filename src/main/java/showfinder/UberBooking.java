@@ -1,4 +1,4 @@
-﻿package showfinder;
+package showfinder;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.WebResource;
@@ -10,7 +10,7 @@ import org.json.JSONObject;
 
 public class UberBooking {
 	
-	private static final String UBER_SANDBOX_SERVER = "https://sandbox-api.uber.com/";
+	private static final String UBER_SANDBOX_SERVER = "https://sandbox-api.uber.com";
 	private static final String UBER_SERVER = "https://api.uber.com";
 	
 
