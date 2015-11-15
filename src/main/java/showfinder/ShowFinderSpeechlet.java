@@ -479,7 +479,8 @@ public class ShowFinderSpeechlet implements Speechlet {
     		String login_url = "";
     		try{
     			Oauth2 auth = new Oauth2();
-    			login_url = auth.getAuthorizationUrl();
+    			String productId = Uber.getProducts(source_lat, source_lon, "uberX");
+    			login_url = auth.getAuthorizationUrl(source_lat,source_lon,dest_lat,dest_lon,userId,productId);
     		}catch(Exception e){
     			speechOutput = "I am sorry. Could not book the ride";
     			SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
