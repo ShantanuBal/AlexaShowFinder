@@ -23,11 +23,6 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-    <groupId>com.uber.sdk</groupId>
-    <artifactId>rides</artifactId>
-    <version>0.1.0</version>
-</dependency>
-    <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
       <version>9.0.6.v20130930</version>

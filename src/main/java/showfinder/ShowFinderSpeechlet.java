@@ -451,13 +451,21 @@ public class ShowFinderSpeechlet implements Speechlet {
     	String dest_lat = lat.get(index-PAGINATION_SIZE+number-1);
     	String dest_lon = lon.get(index-PAGINATION_SIZE+number-1);
     	
-    	String speechOutput, cardOutput;
+    	String speechOutput = null;
+        String cardOutput = null;
 		SimpleCard card = new SimpleCard();
 		String repromptText = "Do you want to find more shows?";
 		
+
+        SpeechletResponse response = null;
+
 		String access_t = isInDB(userId);
     	if (!access_t.equals("Error Occured")) {
-    		UberBooking uberBooking = new UberBooking();
+        response = newAskResponse("<speak>" + "hello baby how are you" + "</speak>", "<speak>" + "I'm good" + "</speak>");
+        response.setCard(card);
+
+
+       		UberBooking uberBooking = new UberBooking();
     		try {
 				uberBooking.requestUber(source_lat, source_lon, dest_lat, dest_lon, "uberX", access_t);
 			} catch (JSONException e) {
@@ -468,34 +476,35 @@ public class ShowFinderSpeechlet implements Speechlet {
 				e.printStackTrace();
 			}
     		
-    		speechOutput = "Your Uber booking request has been made with access code "+access_t;
+    		speechOutput = "Your Uber booking request is success";
     		cardOutput = speechOutput + access_t;
     	
     		// Create the Simple card content.
     		card.setTitle(cardTitle);
     		card.setContent(cardOutput.toString());
     	} else {
-    		//Code snippet for generating login URL
-    		String login_url = "";
-    		try{
-    			Oauth2 auth = new Oauth2();
-    			String productId = Uber.getProducts(source_lat, source_lon, "uberX");
-    			login_url = auth.getAuthorizationUrl(source_lat,source_lon,dest_lat,dest_lon,userId,productId);
-    		}catch(Exception e){
-    			speechOutput = "I am sorry. Could not book the ride";
-    			SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
-    	        response.setCard(card);
-    	        return response;
-    		}
-    		
-    		speechOutput = "Visit the Alexa app to allow me to book your ride.";
-    		cardOutput = login_url;
-    	
-    		// Create the Simple card content.
-    		card.setTitle(cardTitle);
-    		card.setContent(cardOutput.toString());
+            String login_url = "";
+            String productId = "";
+            String enpointResponseUrl = null;
+            try{
+                productId = Uber.getProducts(source_lat, source_lon, "uberX");
+                login_url = "?"+"user_id="+userId+"&source_lat="+source_lat+"&source_lon="+source_lon+"&dest_lat="+dest_lat+"&dest_lon="+dest_lon+"&product_id="+productId;
+                String pythonEndpointUrl = "https://uberalexa.azurewebsites.net/loginurl/" + login_url;
+                enpointResponseUrl = Uber.getResponseFromUrl(pythonEndpointUrl).toString();
+                
+            }catch(Exception e) {
+                speechOutput = "I am sorry. Could not book the ride";
+                response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
+                response.setCard(card);
+                return response;
+            }
+            cardOutput = enpointResponseUrl;
+        
+            // Create the Simple card content.
+            card.setTitle(cardTitle);
+            card.setContent(cardOutput.toString());
     	}
-        SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
+        response = newAskResponse("<speak>" + "Please check your alexa app for details" + "</speak>", "<speak>" + repromptText + "</speak>");
         response.setCard(card);
         return response;
     }

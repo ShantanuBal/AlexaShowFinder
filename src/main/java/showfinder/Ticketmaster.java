@@ -233,7 +233,7 @@ public class Ticketmaster {
 	}
 	
 	private String parseString(String string) {
-		return string.replaceAll("&", "and");
+		return string.replaceAll("&", "and").replaceAll(" v ", " vs ").toLowerCase();
 	}
 	
 }
