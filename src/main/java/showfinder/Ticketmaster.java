@@ -212,6 +212,7 @@ public class Ticketmaster {
 		for (int i = 0; i < jsonArray.length(); i++) {
 			JSONObject jsonEventObject = jsonArray.getJSONObject(i);
 			String eventName = jsonEventObject.getString("name");
+			eventName = parseString(eventName);
 
 			if (addToEventsList(eventName)) {
 				// event description
@@ -223,8 +224,8 @@ public class Ticketmaster {
 				// get the first venue at 0th index
 				String latitude = getLatitude(addrArray.getJSONObject(0));
 				String longitude = getLongitude(addrArray.getJSONObject(0));
-
-				EventsEntity eventDetails = new EventsEntity(parseString(eventName), eventDesc, latitude, longitude);
+				
+				EventsEntity eventDetails = new EventsEntity(eventName, eventDesc, latitude, longitude);
 
 				eventsArrList.add(eventDetails);
 			}
@@ -233,7 +234,16 @@ public class Ticketmaster {
 	}
 	
 	private String parseString(String string) {
-		return string.replaceAll("&", "and").replaceAll(" v ", " vs ").toLowerCase();
+        
+        String formattedString = string.replaceAll("&", "and").replaceAll(" v ", " vs ").toLowerCase();
+		String lastWord = formattedString.substring(formattedString.lastIndexOf(" ")+1);
+		
+		String replaceWord = lastWord.replaceAll("(blvd)$", " boulevard");
+		replaceWord = replaceWord.replaceAll("(st)$", " street");
+    
+		String retString = formattedString.substring(0, formattedString.lastIndexOf(" ")+1) + replaceWord;
+		
+		return retString;
 	}
 	
 }
