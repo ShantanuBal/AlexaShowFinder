@@ -455,12 +455,13 @@ public class ShowFinderSpeechlet implements Speechlet {
 		SimpleCard card = new SimpleCard();
 		String repromptText = "Do you want to find more shows?";
 		
-    	if (isInDB(userId)) {
+		String access_t = isInDB(userId);
+    	if (!access_t.equals("Error Occured")) {
     		// Code snippet to book uber
-        
     		
-    		speechOutput = "Your Uber booking request has been made.";
-    		cardOutput = speechOutput;
+    		
+    		speechOutput = "Your Uber booking request has been made with access code "+access_t;
+    		cardOutput = speechOutput + access_t;
     	
     		// Create the Simple card content.
     		card.setTitle(cardTitle);
@@ -468,8 +469,17 @@ public class ShowFinderSpeechlet implements Speechlet {
     	} else {
     		//Code snippet for generating login URL
     		String login_url = "";
+    		try{
+    			Oauth2 auth = new Oauth2();
+    			login_url = auth.getAuthorizationUrl();
+    		}catch(Exception e){
+    			speechOutput = "I am sorry. Could not book the ride";
+    			SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
+    	        response.setCard(card);
+    	        return response;
+    		}
     		
-    		speechOutput = "Go to the Alexa app to allow me to book your ride.";
+    		speechOutput = "Visit the Alexa app to allow me to book your ride.";
     		cardOutput = login_url;
     	
     		// Create the Simple card content.
@@ -482,9 +492,16 @@ public class ShowFinderSpeechlet implements Speechlet {
     }
    
 
-    private boolean isInDB(String userId) {
+    private String isInDB(String userId) {
 		// TODO Auto-generated method stub
-		return false;
+    	String path = ""; ///home/madhukar/Downloads/rootkey
+    	try{
+    		QueryDynamo q = new QueryDynamo(path);
+    		return q.getUserAccessCode(userId);
+    	}catch(Exception e){
+    		return "Error Occured";
+    	}
+		
 	}
 
 	/**
