@@ -1,8 +1,12 @@
 {
   "intents": [
     {
-      "intent": "GetFirstEventIntent",
+      "intent": "GetTicketMasterFetchIntent",
       "slots": [
+        {
+          "name": "city",
+          "type": "AMAZON.US_CITY"
+        },
         {
           "name": "day",
           "type": "AMAZON.DATE"
@@ -10,8 +14,35 @@
       ]
     },
     {
-      "intent": "GetNextEventIntent",
+      "intent": "GetTicketMasterContinueIntent",
       "slots": []
+    },
+    {
+      "intent": "GetTicketMasterDetailsIntent",
+      "slots": [
+      	{
+          "name": "number",
+          "type": "AMAZON.NUMBER"
+        }
+      ]
+    },
+    {
+      "intent": "GetUberDetailsIntent",
+      "slots": [
+      	{
+          "name": "number",
+          "type": "AMAZON.NUMBER"
+        }
+      ]
+    },
+    {
+      "intent": "GetUberBookingIntent",
+      "slots": [
+      	{
+          "name": "number",
+          "type": "AMAZON.NUMBER"
+        }
+      ]
     },
     {
       "intent": "HelpIntent",

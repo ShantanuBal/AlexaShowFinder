@@ -192,7 +192,7 @@ public class Ticketmaster {
 			eventDesc += "Sorry, Event information is not available for the event " + eventName;
 		}
 
-		return eventDesc;
+		return parseString(eventDesc);
 	}
 
 	private Boolean addToEventsList(String eventName) {
