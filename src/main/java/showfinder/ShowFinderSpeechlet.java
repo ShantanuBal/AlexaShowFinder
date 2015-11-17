@@ -467,7 +467,7 @@ public class ShowFinderSpeechlet implements Speechlet {
 
        		UberBooking uberBooking = new UberBooking();
     		try {
-				uberBooking.requestUber(source_lat, source_lon, dest_lat, dest_lon, "uberX", access_t);
+				uberBooking.requestUber(source_lat, source_lon, dest_lat, dest_lon, "UberBLACK", access_t);
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
