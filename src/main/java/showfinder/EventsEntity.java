@@ -2,7 +2,8 @@ package showfinder;
 
 public class EventsEntity {
 	private String eventName;
-	private String description; // eg: this event starts at <startTime> and it is happening at <address>
+	private String description; // eg: this event starts at <startTime> and it
+								// is happening at <address>
 	private String latitude;
 	private String longitude;
 
@@ -21,7 +22,7 @@ public class EventsEntity {
 	public String getLongitude() {
 		return longitude;
 	}
-	
+
 	public EventsEntity(String eventName, String description, String latitude, String longitude) {
 		this.eventName = eventName;
 		this.description = description;
