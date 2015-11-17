@@ -165,7 +165,12 @@ public class Ticketmaster {
 		String eventStartTime = "";
 		eventStartTime = getEventTime(timeObj);
 		String eventAddress = "";
-		eventAddress = getEventAddress(addressObjArray.getJSONObject(0)); //Default: Taking only the first venue.
+		eventAddress = getEventAddress(addressObjArray.getJSONObject(0)); // Default:
+																			// Taking
+																			// only
+																			// the
+																			// first
+																			// venue.
 
 		if (!eventStartTime.equals("")) {
 			eventDesc += eventName + " is starting at ";
@@ -224,7 +229,7 @@ public class Ticketmaster {
 				// get the first venue at 0th index
 				String latitude = getLatitude(addrArray.getJSONObject(0));
 				String longitude = getLongitude(addrArray.getJSONObject(0));
-				
+
 				EventsEntity eventDetails = new EventsEntity(eventName, eventDesc, latitude, longitude);
 
 				eventsArrList.add(eventDetails);
@@ -232,18 +237,18 @@ public class Ticketmaster {
 		}
 		return eventsArrList;
 	}
-	
+
 	private String parseString(String string) {
-        
-        String formattedString = string.replaceAll("&", "and").replaceAll(" v ", " vs ").toLowerCase();
-		String lastWord = formattedString.substring(formattedString.lastIndexOf(" ")+1);
-		
+
+		String formattedString = string.replaceAll("&", "and").replaceAll(" v ", " vs ").toLowerCase();
+		String lastWord = formattedString.substring(formattedString.lastIndexOf(" ") + 1);
+
 		String replaceWord = lastWord.replaceAll("(blvd)$", " boulevard");
 		replaceWord = replaceWord.replaceAll("(st)$", " street");
-    
-		String retString = formattedString.substring(0, formattedString.lastIndexOf(" ")+1) + replaceWord;
-		
+
+		String retString = formattedString.substring(0, formattedString.lastIndexOf(" ") + 1) + replaceWord;
+
 		return retString;
 	}
-	
+
 }
