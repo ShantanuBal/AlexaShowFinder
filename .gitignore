@@ -2,5 +2,6 @@
 .classpath
 .DS_Store
 .idea
+.idea/
 bin/
 target/
