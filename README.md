@@ -22,7 +22,7 @@ Each app that is built for this device is called a skill. During development thi
 ##Project setup and Usage
 1. clone this project and run a `mvn clean` followed by `mvn assembly:assembly -DdescriptorId=jar-with-dependencies package`. 
 2. The target folder will contain `alexa-skills-kit-samples-1.1-jar-with-dependencies.jar`. Upload this to AWS Lambda as per their instructions (https://github.com/pramodsetlur/alexa-skill-kit/tree/master/src/main/java/helloworld).
-3. The Django SSL endpoint is present at https://github.com/pramodsetlur/UberAlexa-Azure-Endpoint. This has to be hosted with an open port on 443 (an https end point).
+3. The Django SSL endpoint is present at https://github.com/pramodsetlur/UberAlexa-Azure-Endpoint (currently made a private repository as per Amazon's request. We plan to make this public again after we the hide sensitive information.). This has to be hosted with an open port on 443 (an https end point).
 
 ##Various uttarances you can make to Amazon echo after a successful setup
 1. Start show finder
