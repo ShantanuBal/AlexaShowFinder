@@ -1,0 +1,80 @@
+GetTicketMasterFetchIntent get me events in {city} happening on {day}
+GetTicketMasterFetchIntent give me events in {city} on {day}
+GetTicketMasterFetchIntent what's happening in {city} on {day}
+GetTicketMasterFetchIntent what's happening in {city} {day}
+GetTicketMasterFetchIntent {city} on {day}
+GetTicketMasterFetchIntent {city} {day}
+GetTicketMasterFetchIntent events in {city} on {day}
+GetTicketMasterFetchIntent on {day} in {city}
+GetTicketMasterFetchIntent events happening in {city} on {day}
+GetTicketMasterFetchIntent what events are happening in {city} {day}
+GetTicketMasterFetchIntent what events are happening in {city} on {day}
+GetTicketMasterFetchIntent what are the events happening in {city} on {day}
+GetTicketMasterFetchIntent what are the events happening in {city} {day}
+
+
+FinishIntent no
+FinishIntent nope
+FinishIntent no thanks
+FinishIntent no thank you
+FinishIntent exit
+FinishIntent stop
+FinishIntent quit
+FinishIntent good bye
+FinishIntent bye
+FinishIntent thank you
+
+HelpIntent help
+HelpIntent help me
+HelpIntent what can I ask you
+HelpIntent get help
+HelpIntent to help
+HelpIntent to help me
+HelpIntent what commands can I ask
+HelpIntent what commands can I say
+HelpIntent what can I do
+HelpIntent what can I use this for
+HelpIntent what questions can I ask
+HelpIntent what can you do
+HelpIntent what do you do
+HelpIntent how do I use you
+HelpIntent how can I use you
+HelpIntent what can you tell me
+
+GetTicketMasterContinueIntent yes
+GetTicketMasterContinueIntent yup
+GetTicketMasterContinueIntent sure
+GetTicketMasterContinueIntent yes please
+GetTicketMasterContinueIntent go on
+
+GetTicketMasterDetailsIntent get me more details for event number {number}
+GetTicketMasterDetailsIntent get me details for event number {number}
+GetTicketMasterDetailsIntent get me more details for event {number}
+GetTicketMasterDetailsIntent more details for event {number}
+GetTicketMasterDetailsIntent details for event number {number}
+GetTicketMasterDetailsIntent details for event {number}
+GetTicketMasterDetailsIntent tell me more about event {number}
+GetTicketMasterDetailsIntent tell me more about the {number} event
+GetTicketMasterDetailsIntent tell me more about event number {number}
+GetTicketMasterDetailsIntent when and where is event {number} happening
+GetTicketMasterDetailsIntent event number {number}
+GetTicketMasterDetailsIntent event {number}
+GetTicketMasterDetailsIntent get me more details for event number {number}
+GetTicketMasterDetailsIntent get me more details for event {number}
+GetTicketMasterDetailsIntent get me details for event number {number}
+GetTicketMasterDetailsIntent get me details for event {number}
+GetTicketMasterDetailsIntent get me details of event {number}
+GetTicketMasterDetailsIntent tell me more about {number}
+
+
+GetUberDetailsIntent get me uber details for event number {number}
+GetUberDetailsIntent get me uber details for event {number}
+GetUberDetailsIntent get uber details for event {number}
+GetUberDetailsIntent uber details for event {number}
+GetUberDetailsIntent uber details for event number {number}
+
+GetUberBookingIntent book an uber for event number {number}
+GetUberBookingIntent book an uber for event {number}
+GetUberBookingIntent call an uber for event {number}
+GetUberBookingIntent call me an uber for event number {number}
+GetUberBookingIntent call me an uber for event {number}

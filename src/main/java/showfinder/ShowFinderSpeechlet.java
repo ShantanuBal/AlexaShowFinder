@@ -392,22 +392,7 @@ public class ShowFinderSpeechlet implements Speechlet {
 			throws IOException, JSONException {
 		String cardTitle = "More events on this day";
 
-		String source_lat = "34.0223519";
-		String source_lon = "-118.2873057";
-
-		@SuppressWarnings("unchecked")
-		ArrayList<String> lat = (ArrayList<String>) session.getAttribute(SESSION_LAT);
-		@SuppressWarnings("unchecked")
-		ArrayList<String> lon = (ArrayList<String>) session.getAttribute(SESSION_LON);
-
-		int index = (int) session.getAttribute(SESSION_INDEX);
-
-		int number = Integer.parseInt(intent.getSlot(SLOT_NUMBER).getValue());
-		String dest_lat = lat.get(index - PAGINATION_SIZE + number - 1);
-		String dest_lon = lon.get(index - PAGINATION_SIZE + number - 1);
-
-		String speechOutput = Uber.getPriceEstimateAndTimeToDestinationOfUber(source_lat, source_lon, dest_lat,
-				dest_lon, "uberX");
+		String speechOutput = "What the fuck dude";
 		String cardOutput = speechOutput;
 
 		String repromptText = "Do you want to find more shows?";
@@ -425,92 +410,19 @@ public class ShowFinderSpeechlet implements Speechlet {
 	private SpeechletResponse handleUberBookingRequest(Intent intent, Session session) {
 		String cardTitle = "More events on this day";
 
-		String source_lat = "34.0223519";
-		String source_lon = "-118.2873057";
+		String speechOutput = "What the fuck again dude";
+		String cardOutput = speechOutput;
 
-		String userId = session.getUser().getUserId();
-
-		@SuppressWarnings("unchecked")
-		ArrayList<String> lat = (ArrayList<String>) session.getAttribute(SESSION_LAT);
-		@SuppressWarnings("unchecked")
-		ArrayList<String> lon = (ArrayList<String>) session.getAttribute(SESSION_LON);
-
-		int index = (int) session.getAttribute(SESSION_INDEX);
-
-		int number = Integer.parseInt(intent.getSlot(SLOT_NUMBER).getValue());
-		String dest_lat = lat.get(index - PAGINATION_SIZE + number - 1);
-		String dest_lon = lon.get(index - PAGINATION_SIZE + number - 1);
-
-		String speechOutput = null;
-		String cardOutput = null;
-		SimpleCard card = new SimpleCard();
 		String repromptText = "Do you want to find more shows?";
+		// Create the Simple card content.
+		SimpleCard card = new SimpleCard();
+		card.setTitle(cardTitle);
+		card.setContent(cardOutput.toString());
 
-		SpeechletResponse response = null;
-
-		String access_t = isInDB(userId);
-		if (!access_t.equals("Error Occured")) {
-			response = newAskResponse("<speak>" + "hello baby how are you" + "</speak>",
-					"<speak>" + "I'm good" + "</speak>");
-			response.setCard(card);
-
-			UberBooking uberBooking = new UberBooking();
-			try {
-				uberBooking.requestUber(source_lat, source_lon, dest_lat, dest_lon, "UberBLACK", access_t);
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			speechOutput = "Your Uber booking request is success";
-			cardOutput = speechOutput + access_t;
-
-			// Create the Simple card content.
-			card.setTitle(cardTitle);
-			card.setContent(cardOutput.toString());
-		} else {
-			String login_url = "";
-			String productId = "";
-			String enpointResponseUrl = null;
-			try {
-				productId = Uber.getProducts(source_lat, source_lon, "uberX");
-				login_url = "?" + "user_id=" + userId + "&source_lat=" + source_lat + "&source_lon=" + source_lon
-						+ "&dest_lat=" + dest_lat + "&dest_lon=" + dest_lon + "&product_id=" + productId;
-				String pythonEndpointUrl = "https://uberalexa.azurewebsites.net/loginurl" + login_url;
-
-				enpointResponseUrl = Uber.getResponseFromUrl(pythonEndpointUrl).toString();
-				speechOutput = "Please check your alexa app for details";
-
-			} catch (Exception e) {
-				speechOutput = "I am sorry. Could not book the ride";
-				response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
-				response.setCard(card);
-				return response;
-			}
-			cardOutput = enpointResponseUrl;
-
-			// Create the Simple card content.
-			card.setTitle(cardTitle);
-			card.setContent(cardOutput.toString());
-		}
-		response = newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
+		SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>",
+				"<speak>" + repromptText + "</speak>");
 		response.setCard(card);
 		return response;
-	}
-
-	private String isInDB(String userId) {
-		// TODO Auto-generated method stub
-		String path = ""; /// home/madhukar/Downloads/rootkey
-		try {
-			QueryDynamo q = new QueryDynamo(path);
-			return q.getUserAccessCode(userId);
-		} catch (Exception e) {
-			return "Error Occured";
-		}
-
 	}
 
 	/**
