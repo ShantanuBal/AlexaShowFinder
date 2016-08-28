@@ -9,6 +9,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Model representing an item of the ScoreKeeperUserData table in DynamoDB for the ScoreKeeper
  * skill.
@@ -18,7 +21,7 @@ public class BeaconUserDataItem {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private String beaconCategory;
-    private String store;
+    private List<Map<String, String>> beaconValue;
 
     @DynamoDBHashKey(attributeName = "BeaconCategory")
     public String getBeaconCategory() {
@@ -28,11 +31,12 @@ public class BeaconUserDataItem {
         this.beaconCategory = beaconCategory;
     }
 
-    @DynamoDBAttribute(attributeName = "Store")
-    public String getStore() {
-        return store;
+    @DynamoDBAttribute(attributeName = "BeaconValue")
+    public List<Map<String, String>> getBeaconValue() {
+        return beaconValue;
     }
-    public void setStore(String store) {
-        this.store = store;
+
+    public void setBeaconValue(List<Map<String, String>> beaconValue) {
+        this.beaconValue = beaconValue;
     }
 }

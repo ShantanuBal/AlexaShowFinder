@@ -1,56 +1,35 @@
 {
   "intents": [
     {
-      "intent": "GetTicketMasterFetchIntent",
+      "intent": "GetCategoryIntent"
+    },
+    {
+      "intent": "GetDealsIntent",
       "slots": [
-        {
-          "name": "city",
-          "type": "AMAZON.US_CITY"
-        },
-        {
-          "name": "day",
-          "type": "AMAZON.DATE"
+        {"name": "category",
+          "type":"LIST_OF_CATEGORIES"
         }
       ]
     },
     {
-      "intent": "GetTicketMasterContinueIntent",
-      "slots": []
-    },
-    {
-      "intent": "GetTicketMasterDetailsIntent",
+      "intent": "GetDetailsIntent",
       "slots": [
-      	{
-          "name": "number",
-          "type": "AMAZON.NUMBER"
+        {"name": "index",
+          "type":"AMAZON.number"
         }
       ]
     },
     {
-      "intent": "GetUberDetailsIntent",
-      "slots": [
-      	{
-          "name": "number",
-          "type": "AMAZON.NUMBER"
-        }
-      ]
+      "intent": "AMAZON.HelpIntent"
     },
     {
-      "intent": "GetUberBookingIntent",
-      "slots": [
-      	{
-          "name": "number",
-          "type": "AMAZON.NUMBER"
-        }
-      ]
+      "intent": "AMAZON.StopIntent"
     },
     {
-      "intent": "HelpIntent",
-      "slots": []
-    },
-    {
-      "intent": "FinishIntent",
-      "slots": []
+      "intent": "AMAZON.CancelIntent"
     }
+    {
+      "intent": "AMAZON.StartOverIntent"
+    },
   ]
 }

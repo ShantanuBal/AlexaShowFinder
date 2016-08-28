@@ -13,9 +13,9 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 
+import com.amazonaws.annotation.Immutable;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import org.json.JSONException;
 import org.slf4j.Logger;
@@ -83,6 +83,9 @@ public class ShowFinderSpeechlet implements Speechlet {
 	private static final String SESSION_DESC = "desc";
 	private static final String SESSION_LAT = "lat";
 	private static final String SESSION_LON = "lon";
+	private static final String SESSION_STORES = "stores";
+	private static final String SESSION_DEALS = "deals";
+	private static final String SESSION_DEAL_DETAILS = "details";
 
 	/**
 	 * Constant defining session attribute key for the intent slot key for the
@@ -91,6 +94,9 @@ public class ShowFinderSpeechlet implements Speechlet {
 	private static final String SLOT_DAY = "day";
 	private static final String SLOT_CITY = "city";
 	private static final String SLOT_NUMBER = "number";
+	private static final String SLOT_CATEGORY ="category";
+
+	private static List<String> BEACON_CATEGORIES = Arrays.asList("breakfast", "lunch", "and Dinner");
 
 	/**
 	 * Size of events from Ticketmaster response.
@@ -128,17 +134,17 @@ public class ShowFinderSpeechlet implements Speechlet {
 		Intent intent = request.getIntent();
 		String intentName = intent.getName();
 
-		if ("GetTicketMasterFetchIntent".equals(intentName)) {
+		if ("GetCategoryIntent".equals(intentName)) {
 			try {
-				return handleTicketmasterFetchRequest(intent, session);
+				return handleBeaconsCategoryRequest(intent, session);
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else if ("GetTicketMasterContinueIntent".equals(intentName)) {
 			return handleTicketmasterContinueRequest(session);
-		} else if ("GetTicketMasterDetailsIntent".equals(intentName)) {
-			return handleTicketmasterDetailsRequest(intent, session);
+		} else if ("GetDealsIntent".equals(intentName)) {
+			return handleBeaconDealsRequest(intent, session);
 		} else if ("GetUberDetailsIntent".equals(intentName)) {
 			try {
 				return handleUberDetailsRequest(intent, session);
@@ -179,20 +185,22 @@ public class ShowFinderSpeechlet implements Speechlet {
 	 * @return SpeechletResponse object with voice/card response to return to
 	 *         the user
 	 */
+
+	private List<String> getBeaconListByKey(List<Map<String, String>> beaconValueList, String key) {
+		List<String> beaconListByKey = new ArrayList<>();
+		for (Map<String, String> beaconMap : beaconValueList) {
+			beaconListByKey.add(beaconMap.get(key));
+		}
+
+		return beaconListByKey;
+	}
+
 	private SpeechletResponse getWelcomeResponse() {
-		String speechOutput = "Welcome to Show Finder. Give me a location and a date to look for events.";
+		String speechOutput = "Welcome to the Beacon Box. You can check the categories from your beacon collection";
 		// If the user either does not reply to the welcome message or says
 		// something that is not
 		// understood, they will be prompted again with this text.
-		String repromptText = "With Show Finder, you can find out what movies are playing nearby and book a ride on Uber.";
-
-		AmazonDynamoDBClient amazonDynamoDBClient = new AmazonDynamoDBClient();
-		BeaconDynamoDbClient beaconDynamoDbClient = new BeaconDynamoDbClient(amazonDynamoDBClient);
-		BeaconDao beaconDao = new BeaconDao(beaconDynamoDbClient);
-		final String beaconString = beaconDao.getBeaconDataByCategory("LUNCH");
-
-		//log.info("Bacon data object %s", beaconDao.getBeaconDataByCategory("LUNCH"));
-		speechOutput += beaconString;
+		String repromptText = "With Beacon box, you can get to learn about the deals from your beacon collections";
 
 		return newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
 	}
@@ -240,6 +248,89 @@ public class ShowFinderSpeechlet implements Speechlet {
 	 *         the user
 	 * @throws JSONException
 	 */
+	private SpeechletResponse handleBeaconsCategoryRequest(Intent intent, Session session) throws JSONException {
+		String cardTitle = "Beacon Categories";
+		String speechPrefix = "<p> Here the categories from your beacon collection. </p>";
+		String cardPrefixContent = "Here the categories from your beacon collection. ";
+
+		StringBuilder speechOutputBuilder = new StringBuilder();
+		speechOutputBuilder.append(speechPrefix);
+		for (String beaconCategory : BEACON_CATEGORIES) {
+			speechOutputBuilder.append("<p>");
+			speechOutputBuilder.append(beaconCategory);
+			speechOutputBuilder.append("</p>");
+		}
+		StringBuilder cardOutputBuilder = new StringBuilder();
+		cardOutputBuilder.append(cardPrefixContent);
+
+		final String speechOutput = speechOutputBuilder.toString();
+		final String repromptText = "<p> You can check deals on a particular category </p>";
+
+		// Create the Simple card content.
+		SimpleCard card = new SimpleCard();
+		card.setTitle(cardTitle);
+		card.setContent(cardOutputBuilder.toString());
+
+		SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>",
+				"<speak>" + repromptText + "</speak>");
+		response.setCard(card);
+		return response;
+	}
+
+	private BeaconDao getBeaconDao() {
+		final AmazonDynamoDBClient amazonDynamoDBClient = new AmazonDynamoDBClient();
+		final BeaconDynamoDbClient beaconDynamoDbClient = new BeaconDynamoDbClient(amazonDynamoDBClient);
+		final BeaconDao beaconDao = new BeaconDao(beaconDynamoDbClient);
+
+		return beaconDao;
+
+	}
+
+	private void saveBeaconData(List<String> storeList, List<String> dealList, List<String> detailsList, Session session) {
+		session.setAttribute(SESSION_STORES, storeList);
+		session.setAttribute(SESSION_DEALS, dealList);
+		session.setAttribute(SESSION_DEAL_DETAILS, detailsList);
+	}
+
+	private SpeechletResponse handleBeaconDealsRequest(Intent intent, Session session) throws JSONException {
+
+		BeaconDao beaconDao = getBeaconDao();
+		String category = intent.getSlot(SLOT_CATEGORY).getValue();
+
+		String cardTitle = "Beacons deal Request";
+		String speechPrefix = "Here are the " + category + "deals. ";
+
+		final List<Map<String, String>> beaconsList = beaconDao.getBeaconValue(category);
+		List<String> storeList = getBeaconListByKey(beaconsList, "store");
+		List<String> dealsList = getBeaconListByKey(beaconsList, "deal");
+		List<String> detailsList = getBeaconListByKey(beaconsList, "details");
+
+		saveBeaconData(storeList, dealsList, detailsList, session);
+
+		StringBuilder storeDeailsBuilder = new StringBuilder();
+		for (int index = 0; index < storeList.size(); index++) {
+			storeDeailsBuilder.append(" <p> ");
+			storeDeailsBuilder.append(dealsList.get(index));
+			storeDeailsBuilder.append(" at ");
+			storeDeailsBuilder.append(storeList.get(index));
+			storeDeailsBuilder.append(" </p> ");
+		}
+		String speechOutput = speechPrefix + storeDeailsBuilder.toString();
+		String cardOutput = speechOutput;
+
+		String repromptText = "Do you want to find more shows?";
+		// Create the Simple card content.
+		SimpleCard card = new SimpleCard();
+		card.setTitle(cardTitle);
+		card.setContent(cardOutput.toString());
+
+		SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>",
+				"<speak>" + repromptText + "</speak>");
+		response.setCard(card);
+		return response;
+
+	}
+
 	private SpeechletResponse handleTicketmasterFetchRequest(Intent intent, Session session) throws JSONException {
 		/* Calendar calendar */ String date = getCalendar(intent);
 		/*
