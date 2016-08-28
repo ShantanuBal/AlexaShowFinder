@@ -9,7 +9,6 @@
  */
 package showfinder;
 
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -38,31 +37,12 @@ import com.amazon.speech.ui.SsmlOutputSpeech;
  * This sample shows how to create a Lambda function for handling Alexa Skill
  * requests that:
  * 
- * Alexa, start show finder. onLaunch executed
- * 
- * What's happening in LA today? TicketMasterFetchIntent - {city}, {day}
- * Response - Do you want me to go on or are you interested in an event?
- * 
- * Go on / yes / yup TicketMasterContinueIntent - Response - Would you like to
- * get details for an Uber ride?
- * 
- * Get me more details for event number 2 TicketMasterDetailsIntent - {number}
- * Response -
- * 
- * Get me Uber details for event number 2 UberDetailsIntent - {number}
+ * Alexa, start beacon box. onLaunch executed
+ *
  * 
  */
 public class ShowFinderSpeechlet implements Speechlet {
 	private static final Logger log = LoggerFactory.getLogger(ShowFinderSpeechlet.class);
-
-	/**
-	 * URL prefix to download history content from Wikipedia.
-	 */
-	/*
-	 * private static final String URL_PREFIX =
-	 * "https://en.wikipedia.org/w/api.php?action=query&prop=extracts" +
-	 * "&format=json&explaintext=&exsectionformat=plain&redirects=&titles=";
-	 */
 
 	/**
 	 * Constant defining number of events to be read at one time.
@@ -97,21 +77,7 @@ public class ShowFinderSpeechlet implements Speechlet {
 	private static final String SLOT_INDEX = "index";
 
 	private static List<String> BEACON_CATEGORIES = Arrays.asList("breakfast", "lunch", "and Dinner");
-
-	/**
-	 * Size of events from Ticketmaster response.
-	 */
-	// private static final int SIZE_OF_EVENTS = 10;
-
-	/**
-	 * Array of month names.
-	 */
-
-	/*
-	 * private static final String[] MONTH_NAMES = { "January", "February",
-	 * "March", "April", "May", "June", "July", "August", "September",
-	 * "October", "November", "December" };
-	 */
+	private static List<String> DEAL_NUMBERS = Arrays.asList(" one. ", " two. ", " three. ");
 
 	@Override
 	public void onSessionStarted(final SessionStartedRequest request, final Session session) throws SpeechletException {
@@ -147,9 +113,8 @@ public class ShowFinderSpeechlet implements Speechlet {
 				return handleBeaconDetailsRequest(intent, session);
 		} else if ("HelpIntent".equals(intentName)) {
 			// Create the plain text output.
-			String speechOutput = "With Show Finder, you can find events happening in your city and book a ride through Uber.";
-
-			String repromptText = "Where do you want to find events?";
+			String speechOutput = "With Beacon Box, you can know the beacons you collected and get to know more details on a interested beacon";
+			String repromptText = "Would you like to list the categories of beacons you collected?";
 
 			return newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
 		} else if ("FinishIntent".equals(intentName)) {
@@ -187,7 +152,7 @@ public class ShowFinderSpeechlet implements Speechlet {
 	}
 
 	private SpeechletResponse getWelcomeResponse() {
-		String speechOutput = "Welcome to the Beacon Box. You can check the categories from your beacon collection";
+		String speechOutput = "Welcome to the Beacon Box. Today you have collected food deals";
 		// If the user either does not reply to the welcome message or says
 		// something that is not
 		// understood, they will be prompted again with this text.
@@ -301,6 +266,7 @@ public class ShowFinderSpeechlet implements Speechlet {
 		StringBuilder storeDeailsBuilder = new StringBuilder();
 		for (int index = 0; index < storeList.size(); index++) {
 			storeDeailsBuilder.append(" <p> ");
+			storeDeailsBuilder.append(DEAL_NUMBERS.get(index));
 			storeDeailsBuilder.append(dealsList.get(index));
 			storeDeailsBuilder.append(" at ");
 			storeDeailsBuilder.append(storeList.get(index));
@@ -309,7 +275,7 @@ public class ShowFinderSpeechlet implements Speechlet {
 		String speechOutput = speechPrefix + storeDeailsBuilder.toString();
 		String cardOutput = speechOutput;
 
-		String repromptText = "Do you want to find more shows?";
+		String repromptText = "Do you want more details on any of the deal?";
 		// Create the Simple card content.
 		SimpleCard card = new SimpleCard();
 		card.setTitle(cardTitle);
@@ -320,188 +286,12 @@ public class ShowFinderSpeechlet implements Speechlet {
 		response.setCard(card);
 		return response;
 
-	}
-
-	private SpeechletResponse handleTicketmasterFetchRequest(Intent intent, Session session) throws JSONException {
-		/* Calendar calendar */ String date = getCalendar(intent);
-		/*
-		 * String month = MONTH_NAMES[calendar.get(Calendar.MONTH)]; String date
-		 * = Integer.toString(calendar.get(Calendar.DATE));
-		 */
-
-		String speechPrefixContent = "<p>For " + date + "</p> ";
-		String cardPrefixContent = "For " + date + ", ";
-		String cardTitle = "Events on " + date;
-		String city = intent.getSlot(SLOT_CITY).getValue();
-
-		Ticketmaster ticketmaster = new Ticketmaster();
-		ArrayList<EventsEntity> events = ticketmaster.getEventDetails(city, date);
-		// ArrayList<String> events = getEventsFromTicketMaster(date, city);
-		// /*getJsonEventsFromWikipedia(month, date);*/
-
-		String speechOutput = "";
-		if (events == null || events.isEmpty()) {
-			speechOutput = "There are no events right now. Please try again later.";
-
-			// Create the plain text output
-			SsmlOutputSpeech outputSpeech = new SsmlOutputSpeech();
-			outputSpeech.setSsml("<speak>" + speechOutput + "</speak>");
-
-			return SpeechletResponse.newTellResponse(outputSpeech);
-		} else {
-			StringBuilder speechOutputBuilder = new StringBuilder();
-			speechOutputBuilder.append(speechPrefixContent);
-			StringBuilder cardOutputBuilder = new StringBuilder();
-			cardOutputBuilder.append(cardPrefixContent);
-			for (int i = 0; i < PAGINATION_SIZE; i++) {
-				speechOutputBuilder.append("<p>");
-				speechOutputBuilder.append(events.get(i).getEventName());
-				speechOutputBuilder.append("</p>");
-				cardOutputBuilder.append(events.get(i).getEventName());
-				cardOutputBuilder.append(" ");
-			}
-			speechOutputBuilder.append(" Do you want more shows?");
-			cardOutputBuilder.append(" Do you want more shows?");
-			speechOutput = speechOutputBuilder.toString();
-
-			String repromptText = "Do you want to find out about more shows?";
-
-			// Create the Simple card content.
-			SimpleCard card = new SimpleCard();
-			card.setTitle(cardTitle);
-			card.setContent(cardOutputBuilder.toString());
-
-			// After reading the first 3 events, set the count to 3 and add the
-			// events
-			// to the session attributes
-			session.setAttribute(SESSION_INDEX, PAGINATION_SIZE);
-			ArrayList<String> name = new ArrayList<String>();
-			ArrayList<String> description = new ArrayList<String>();
-			ArrayList<String> latitude = new ArrayList<String>();
-			ArrayList<String> longitude = new ArrayList<String>();
-
-			for (int i = 0; i < events.size(); i++) {
-				name.add(events.get(i).getEventName());
-				description.add(events.get(i).getDescription());
-				latitude.add(events.get(i).getLatitude());
-				longitude.add(events.get(i).getLongitude());
-			}
-			session.setAttribute(SESSION_TEXT, name);
-			session.setAttribute(SESSION_DESC, description);
-			session.setAttribute(SESSION_LAT, latitude);
-			session.setAttribute(SESSION_LON, longitude);
-
-			SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>",
-					"<speak>" + repromptText + "</speak>");
-			response.setCard(card);
-			return response;
-		}
-	}
-
-	/**
-	 * Prepares the speech to reply to the user. Obtains the list of events as
-	 * well as the current index from the session attributes. After getting the
-	 * next set of events, increment the index and store it back in session
-	 * attributes. This allows us to obtain new events without making repeated
-	 * network calls, by storing values (events, index) during the interaction
-	 * with the user.
-	 * 
-	 * @param session
-	 *            object containing session attributes with events list and
-	 *            index
-	 * @return SpeechletResponse object with voice/card response to return to
-	 *         the user
-	 */
-	private SpeechletResponse handleTicketmasterContinueRequest(Session session) {
-		String cardTitle = "More events on this day";
-		@SuppressWarnings("unchecked")
-		ArrayList<String> events = (ArrayList<String>) session.getAttribute(SESSION_TEXT);
-		int index = (int) session.getAttribute(SESSION_INDEX);
-		String speechOutput = "";
-		String cardOutput = "";
-		if (events == null) {
-			speechOutput = "With Show Finder, you can find out what movies are playing nearby and book a ride on Uber."
-					+ "Where would you like to watch a movie?";
-		} else if (index >= events.size()) {
-			speechOutput = "There are no more shows in this city.";
-		} else {
-			StringBuilder speechOutputBuilder = new StringBuilder();
-			StringBuilder cardOutputBuilder = new StringBuilder();
-			for (int i = 0; i < PAGINATION_SIZE && index < events.size(); i++) {
-				speechOutputBuilder.append("<p>");
-				speechOutputBuilder.append(events.get(index));
-				speechOutputBuilder.append("</p> ");
-				cardOutputBuilder.append(events.get(index));
-				cardOutputBuilder.append(" ");
-				index++;
-			}
-			if (index < events.size()) {
-				speechOutputBuilder.append(" Do you want to hear more?");
-				cardOutputBuilder.append(" Do you want to hear more?");
-			}
-			session.setAttribute(SESSION_INDEX, index);
-			speechOutput = speechOutputBuilder.toString();
-			cardOutput = cardOutputBuilder.toString();
-		}
-		String repromptText = "Do you want to find more shows?";
-
-		// Create the Simple card content.
-		SimpleCard card = new SimpleCard();
-		card.setTitle(cardTitle);
-		card.setContent(cardOutput.toString());
-
-		SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>",
-				"<speak>" + repromptText + "</speak>");
-		response.setCard(card);
-		return response;
-	}
-
-	private SpeechletResponse handleTicketmasterDetailsRequest(Intent intent, Session session) {
-		String cardTitle = "Details of selected event";
-
-		@SuppressWarnings("unchecked")
-		ArrayList<String> events = (ArrayList<String>) session.getAttribute(SESSION_DESC);
-		int index = (int) session.getAttribute(SESSION_INDEX);
-
-		int number = Integer.parseInt(intent.getSlot(SLOT_NUMBER).getValue());
-		String speechOutput = events.get(index - PAGINATION_SIZE + number - 1);
-		String cardOutput = speechOutput;
-
-		String repromptText = "Do you want to find more shows?";
-		// Create the Simple card content.
-		SimpleCard card = new SimpleCard();
-		card.setTitle(cardTitle);
-		card.setContent(cardOutput.toString());
-
-		SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>",
-				"<speak>" + repromptText + "</speak>");
-		response.setCard(card);
-		return response;
-	}
-
-	private SpeechletResponse handleUberDetailsRequest(Intent intent, Session session)
-			throws IOException, JSONException {
-		String cardTitle = "More events on this day";
-
-		String speechOutput = "What the fuck dude";
-		String cardOutput = speechOutput;
-
-		String repromptText = "Do you want to find more shows?";
-		// Create the Simple card content.
-		SimpleCard card = new SimpleCard();
-		card.setTitle(cardTitle);
-		card.setContent(cardOutput.toString());
-
-		SpeechletResponse response = newAskResponse("<speak>" + speechOutput + "</speak>",
-				"<speak>" + repromptText + "</speak>");
-		response.setCard(card);
-		return response;
 	}
 
 	private SpeechletResponse handleBeaconDetailsRequest(Intent intent, Session session) {
 		String cardTitle = "More events on this day";
 
-		int dealIndex = Integer.parseInt(intent.getSlot(SLOT_INDEX).getValue());
+		int dealIndex = Integer.parseInt(intent.getSlot(SLOT_INDEX).getValue()) - 1;
 
 		StringBuilder detailsBuilder = new StringBuilder();
 		List<String> storeList = (List<String>) session.getAttribute(SESSION_STORES);
@@ -516,7 +306,7 @@ public class ShowFinderSpeechlet implements Speechlet {
 		String speechOutput = detailsBuilder.toString();
 		String cardOutput = speechOutput;
 
-		String repromptText = "Are you interested in more categories?";
+		String repromptText = "Are you interested in other beacon categories?";
 		// Create the Simple card content.
 		SimpleCard card = new SimpleCard();
 		card.setTitle(cardTitle);
