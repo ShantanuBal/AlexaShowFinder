@@ -15,7 +15,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.amazonaws.annotation.Immutable;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import org.json.JSONException;
 import org.slf4j.Logger;
@@ -95,6 +94,7 @@ public class ShowFinderSpeechlet implements Speechlet {
 	private static final String SLOT_CITY = "city";
 	private static final String SLOT_NUMBER = "number";
 	private static final String SLOT_CATEGORY ="category";
+	private static final String SLOT_INDEX = "index";
 
 	private static List<String> BEACON_CATEGORIES = Arrays.asList("breakfast", "lunch", "and Dinner");
 
@@ -141,19 +141,10 @@ public class ShowFinderSpeechlet implements Speechlet {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} else if ("GetTicketMasterContinueIntent".equals(intentName)) {
-			return handleTicketmasterContinueRequest(session);
 		} else if ("GetDealsIntent".equals(intentName)) {
 			return handleBeaconDealsRequest(intent, session);
-		} else if ("GetUberDetailsIntent".equals(intentName)) {
-			try {
-				return handleUberDetailsRequest(intent, session);
-			} catch (IOException | JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} else if ("GetUberBookingIntent".equals(intentName)) {
-			return handleUberBookingRequest(intent, session);
+		} else if ("GetDetailsIntent".equals(intentName)) {
+				return handleBeaconDetailsRequest(intent, session);
 		} else if ("HelpIntent".equals(intentName)) {
 			// Create the plain text output.
 			String speechOutput = "With Show Finder, you can find events happening in your city and book a ride through Uber.";
@@ -507,13 +498,25 @@ public class ShowFinderSpeechlet implements Speechlet {
 		return response;
 	}
 
-	private SpeechletResponse handleUberBookingRequest(Intent intent, Session session) {
+	private SpeechletResponse handleBeaconDetailsRequest(Intent intent, Session session) {
 		String cardTitle = "More events on this day";
 
-		String speechOutput = "What the fuck again dude";
+		int dealIndex = Integer.parseInt(intent.getSlot(SLOT_INDEX).getValue());
+
+		StringBuilder detailsBuilder = new StringBuilder();
+		List<String> storeList = (List<String>) session.getAttribute(SESSION_STORES);
+		detailsBuilder.append("<p>");
+		detailsBuilder.append(storeList.get(dealIndex));
+		detailsBuilder.append(" is offering ");
+		List<String> detailsList = (List<String>) session.getAttribute(SESSION_DEAL_DETAILS);
+		detailsBuilder.append(detailsList.get(dealIndex));
+		detailsBuilder.append(" for this week. ");
+		detailsBuilder.append("</p>");
+
+		String speechOutput = detailsBuilder.toString();
 		String cardOutput = speechOutput;
 
-		String repromptText = "Do you want to find more shows?";
+		String repromptText = "Are you interested in more categories?";
 		// Create the Simple card content.
 		SimpleCard card = new SimpleCard();
 		card.setTitle(cardTitle);
