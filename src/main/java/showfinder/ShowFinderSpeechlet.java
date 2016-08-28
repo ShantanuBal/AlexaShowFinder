@@ -16,6 +16,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -184,6 +185,14 @@ public class ShowFinderSpeechlet implements Speechlet {
 		// something that is not
 		// understood, they will be prompted again with this text.
 		String repromptText = "With Show Finder, you can find out what movies are playing nearby and book a ride on Uber.";
+
+		AmazonDynamoDBClient amazonDynamoDBClient = new AmazonDynamoDBClient();
+		BeaconDynamoDbClient beaconDynamoDbClient = new BeaconDynamoDbClient(amazonDynamoDBClient);
+		BeaconDao beaconDao = new BeaconDao(beaconDynamoDbClient);
+		final String beaconString = beaconDao.getBeaconDataByCategory("LUNCH");
+
+		//log.info("Bacon data object %s", beaconDao.getBeaconDataByCategory("LUNCH"));
+		speechOutput += beaconString;
 
 		return newAskResponse("<speak>" + speechOutput + "</speak>", "<speak>" + repromptText + "</speak>");
 	}
